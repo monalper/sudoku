@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Sudoku</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <noscript>Bu siteyi kullanmak için JavaScript açık olmalı.</noscript>
+
+    <div class="app" data-busy="false">
+      <header class="topbar">
+        <div class="header-row">
+          <h1 class="title">Sudoku</h1>
+          <div class="controls">
+            <select id="difficulty" class="select" aria-label="Zorluk seç">
+              <option value="easy">Kolay</option>
+              <option value="medium" selected>Orta</option>
+              <option value="hard">Zor</option>
+              <option value="expert">Usta</option>
+            </select>
+            <button id="newGame" class="button" type="button">Yeni Oyun</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="board-panel" aria-label="Sudoku">
+          <div class="board-meta" aria-label="Skor">
+            <div id="time" class="board-meta-left" aria-label="Süre">00:00</div>
+            <div id="score" class="board-meta-center" aria-label="Skor">Skor 0</div>
+            <div id="highScore" class="board-meta-right" aria-label="En yüksek skor">En Yüksek 0</div>
+          </div>
+          <div id="board" class="board" role="grid" aria-label="Sudoku tahtası"></div>
+        </section>
+
+        <section class="pad-panel" aria-label="Sayı tuş takımı">
+          <div id="pad" class="pad" role="group" aria-label="Sayılar">
+            <button class="pad-key" type="button" data-num="1">1</button>
+            <button class="pad-key" type="button" data-num="2">2</button>
+            <button class="pad-key" type="button" data-num="3">3</button>
+            <button class="pad-key" type="button" data-num="4">4</button>
+            <button class="pad-key" type="button" data-num="5">5</button>
+            <button class="pad-key" type="button" data-num="6">6</button>
+            <button class="pad-key" type="button" data-num="7">7</button>
+            <button class="pad-key" type="button" data-num="8">8</button>
+            <button class="pad-key" type="button" data-num="9">9</button>
+          </div>
+          <div class="pad-actions" aria-label="Aksiyonlar">
+            <button id="erase" class="pad-action" type="button" aria-label="Sil">
+              <i data-lucide="delete" aria-hidden="true"></i>
+            </button>
+            <button id="check" class="pad-action" type="button" aria-label="Kontrol et">
+              <i data-lucide="check" aria-hidden="true"></i>
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+      <dialog id="finishDialog" class="dialog" aria-label="Oyun bitti">
+        <div class="dialog-content">
+          <h2 class="dialog-title">Tebrikler!</h2>
+          <p class="dialog-text" id="finishSummary"></p>
+          <div class="dialog-actions">
+            <button id="playAgain" class="button" type="button">Tekrar Oyna</button>
+            <button id="closeDialog" class="button button-secondary" type="button">Kapat</button>
+          </div>
+        </div>
+      </dialog>
+
+      <div class="busy" aria-hidden="true">
+        <div class="busy-inner">Sudoku hazırlanıyor…</div>
+      </div>
+    </div>
+  </body>
+</html>

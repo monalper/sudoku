@@ -634,7 +634,4 @@ body.theme-win98 .waiting-image {
   filter: none;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  border: 2px solid #ffffff;
-  border-right-color: #404040;
-  border-bottom-color: #404040;
 }

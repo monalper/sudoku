@@ -39,6 +39,7 @@
           <div class="board-meta" aria-label="Skor">
             <div id="time" class="board-meta-left" aria-label="Süre">00:00</div>
             <div id="score" class="board-meta-center" aria-label="Skor">Skor 0</div>
+            <div id="mistakes" class="board-meta-mistakes" aria-label="Hata hakkı">Hata 0/3</div>
             <div id="highScore" class="board-meta-right" aria-label="En yüksek skor">En Yüksek 0</div>
           </div>
           <div id="board" class="board" role="grid" aria-label="Sudoku tahtası"></div>
@@ -69,9 +70,21 @@
 
       <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
+      <div
+        id="waiting"
+        class="waiting"
+        aria-hidden="true"
+        role="button"
+        tabindex="0"
+        aria-label="Bekleme panelini kapat"
+      >
+        <div class="waiting-message">Hata yapmanı bekliyorum!</div>
+        <img class="waiting-image" src="assets/waiting.png" alt="" decoding="async" loading="lazy" />
+      </div>
+
       <dialog id="finishDialog" class="dialog" aria-label="Oyun bitti">
         <div class="dialog-content">
-          <h2 class="dialog-title">Tebrikler!</h2>
+          <h2 id="finishTitle" class="dialog-title">Tebrikler!</h2>
           <p class="dialog-text" id="finishSummary"></p>
           <div class="dialog-actions">
             <button id="playAgain" class="button" type="button">Tekrar Oyna</button>

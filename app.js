@@ -1,6 +1,7 @@
 (() => {
   const STORAGE_KEY = "sudoku_high_scores_v1";
   const ALL_CANDIDATES_MASK = 0b1111111110; // bits 1..9
+  const MAX_MISTAKES = 3;
 
   const DIFFICULTIES = {
     easy: { label: "Kolay", targetClues: 40, multiplier: 1 },
@@ -212,9 +213,12 @@
     const padEl = document.getElementById("pad");
     const timeEl = document.getElementById("time");
     const scoreEl = document.getElementById("score");
+    const mistakesEl = document.getElementById("mistakes");
     const highScoreEl = document.getElementById("highScore");
     const toastEl = document.getElementById("toast");
+    const waitingEl = document.getElementById("waiting");
     const finishDialogEl = document.getElementById("finishDialog");
+    const finishTitleEl = document.getElementById("finishTitle");
     const finishSummaryEl = document.getElementById("finishSummary");
     const playAgainEl = document.getElementById("playAgain");
     const closeDialogEl = document.getElementById("closeDialog");
@@ -231,6 +235,7 @@
       fixed: new Array(81).fill(false),
       clues: 0,
       mistakes: 0,
+      waitingDismissed: false,
       startedAtMs: 0,
       elapsedSeconds: 0,
       timerId: null,
@@ -241,16 +246,38 @@
 
     let toastTimer = null;
 
+    const updateWaiting = () => {
+      if (!waitingEl) return;
+      const showWaiting =
+        !state.busy && !state.finished && state.mistakes >= 2 && state.waitingDismissed !== true;
+      waitingEl.classList.toggle("is-visible", showWaiting);
+      waitingEl.setAttribute("aria-hidden", showWaiting ? "false" : "true");
+    };
+
+    const updateControls = () => {
+      const disabledByBusy = state.busy;
+      const disabledByFinished = state.finished;
+
+      newGameEl.disabled = disabledByBusy;
+      difficultyEl.disabled = disabledByBusy;
+
+      const disableInput = disabledByBusy || disabledByFinished;
+      eraseEl.disabled = disableInput;
+      checkEl.disabled = disableInput;
+
+      for (const cell of cellEls) {
+        if (!cell) continue;
+        cell.btn.disabled = disableInput;
+      }
+
+      for (const btn of padEl.querySelectorAll("button")) btn.disabled = disableInput;
+      updateWaiting();
+    };
+
     const setBusy = (busy) => {
       state.busy = busy;
       appEl.dataset.busy = busy ? "true" : "false";
-      const disabled = busy;
-      newGameEl.disabled = disabled;
-      eraseEl.disabled = disabled;
-      checkEl.disabled = disabled;
-      difficultyEl.disabled = disabled;
-      for (const cell of cellEls) cell.btn.disabled = disabled;
-      for (const btn of padEl.querySelectorAll("button")) btn.disabled = disabled;
+      updateControls();
     };
 
     const toast = (msg) => {
@@ -292,6 +319,14 @@
       timeEl.textContent = formatTime(state.elapsedSeconds);
       scoreEl.textContent = `Skor ${computeScore()}`;
       highScoreEl.textContent = `En Yüksek ${computeOverallHighScore(highScores)}`;
+
+      if (mistakesEl) {
+        const remaining = Math.max(0, MAX_MISTAKES - state.mistakes);
+        mistakesEl.textContent = `Hata ${state.mistakes}/${MAX_MISTAKES}`;
+        mistakesEl.classList.toggle("is-danger", remaining <= 1);
+      }
+
+      updateWaiting();
     };
 
     const computeScore = () => {
@@ -380,15 +415,34 @@
       const prev = state.current[idx];
       if (prev === n) return;
 
+      const isWrongNow = n !== 0 && n !== state.solution[idx];
+
       state.current[idx] = n;
 
-      if (n !== 0 && n !== state.solution[idx]) {
+      if (isWrongNow) {
         state.mistakes++;
+
+        const cellBtn = cellEls[idx]?.btn;
+        if (cellBtn) {
+          cellBtn.classList.remove("is-mistake");
+          // Retrigger animation even if user repeats a mistake quickly.
+          void cellBtn.offsetWidth;
+          cellBtn.classList.add("is-mistake");
+          setTimeout(() => cellBtn.classList.remove("is-mistake"), 260);
+        }
+
+        const remaining = MAX_MISTAKES - state.mistakes;
+        if (remaining > 0) toast(`Hatalı! Kalan hak: ${remaining}`);
       }
 
       renderCell(idx);
       updateHighlights();
       updateStats();
+
+      if (state.mistakes >= MAX_MISTAKES) {
+        endGame({ won: false, reason: "mistakes" });
+        return;
+      }
       maybeFinish();
     };
 
@@ -421,7 +475,7 @@
         if (state.current[idx] === 0) return;
         if (state.current[idx] !== state.solution[idx]) return;
       }
-      finishGame();
+      endGame({ won: true });
     };
 
     const stopTimer = () => {
@@ -442,25 +496,44 @@
       }, 250);
     };
 
-    const finishGame = () => {
+    const endGame = ({ won, reason } = { won: true, reason: "" }) => {
       state.finished = true;
       stopTimer();
 
       const finalScore = computeScore();
-      const prevBest = highScores.byDifficulty[state.difficultyKey] || 0;
-      if (finalScore > prevBest) {
-        highScores.byDifficulty[state.difficultyKey] = finalScore;
-        saveHighScores(highScores);
+      if (won) {
+        const prevBest = highScores.byDifficulty[state.difficultyKey] || 0;
+        if (finalScore > prevBest) {
+          highScores.byDifficulty[state.difficultyKey] = finalScore;
+          saveHighScores(highScores);
+        }
       }
 
       const overall = computeOverallHighScore(highScores);
       const diffLabel = (DIFFICULTIES[state.difficultyKey] || DIFFICULTIES.medium).label;
 
-      finishSummaryEl.textContent = `Seviye: ${diffLabel} • Süre: ${formatTime(
-        state.elapsedSeconds,
-      )} • Hata: ${state.mistakes} • Skor: ${finalScore} • Genel En Yüksek: ${overall}`;
+      if (finishTitleEl) finishTitleEl.textContent = won ? "Tebrikler!" : "Oyun Bitti";
+
+      if (!won && reason === "mistakes") {
+        finishSummaryEl.textContent = [
+          `${MAX_MISTAKES} hata yaptın.`,
+          `Seviye: ${diffLabel}`,
+          `Süre: ${formatTime(state.elapsedSeconds)}`,
+          `Skor: ${finalScore}`,
+          `Genel En Yüksek: ${overall}`,
+        ].join("\n");
+      } else {
+        finishSummaryEl.textContent = [
+          `Seviye: ${diffLabel}`,
+          `Süre: ${formatTime(state.elapsedSeconds)}`,
+          `Hata: ${state.mistakes}`,
+          `Skor: ${finalScore}`,
+          `Genel En Yüksek: ${overall}`,
+        ].join("\n");
+      }
 
       if (typeof finishDialogEl.showModal === "function") finishDialogEl.showModal();
+      updateControls();
       updateStats();
     };
 
@@ -468,6 +541,7 @@
       state.difficultyKey = difficultyEl.value in DIFFICULTIES ? difficultyEl.value : "medium";
       state.finished = false;
       state.mistakes = 0;
+      state.waitingDismissed = false;
 
       setBusy(true);
       await nextFrame();
@@ -522,6 +596,20 @@
       if (typeof finishDialogEl.close === "function") finishDialogEl.close();
     });
 
+    waitingEl?.addEventListener("click", () => {
+      if (state.busy || state.finished) return;
+      state.waitingDismissed = true;
+      updateWaiting();
+    });
+
+    waitingEl?.addEventListener("keydown", (e) => {
+      if (state.busy || state.finished) return;
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      state.waitingDismissed = true;
+      updateWaiting();
+    });
+
     document.addEventListener("keydown", (e) => {
       if (state.busy) return;
       const tag = (e.target && e.target.tagName ? String(e.target.tagName) : "").toLowerCase();
@@ -562,6 +650,7 @@
     });
 
     updateStats();
+    updateControls();
     startNewGame();
   };
 

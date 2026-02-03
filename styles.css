@@ -72,6 +72,9 @@ select {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.01em;
+  user-select: none;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .controls {
@@ -98,6 +101,7 @@ select {
 .topbar .select {
   appearance: none;
   -webkit-appearance: none;
+  -moz-appearance: none;
   color-scheme: dark;
   padding-right: 22px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23edece4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -481,4 +485,156 @@ select {
   .topbar {
     margin-bottom: 18px;
   }
+}
+
+/* Windows 98 theme (toggle via triple-click on header title) */
+body.theme-win98 {
+  --bg: #008080;
+  --text: #000000;
+  --muted: #202020;
+  --panel: #c0c0c0;
+  --panel-2: #d4d0c8;
+  --grid-inner: #808080;
+  --grid-block: #000000;
+  --grid-outer: #000000;
+  --hl: #000080;
+  --hl-related: #dcdcdc;
+  --hl-same: #b5d5ff;
+  --accent: #000080;
+  --danger: #800000;
+  --focus: #000000;
+  --radius: 0px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Tahoma, "MS Sans Serif", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+body.theme-win98 .app {
+  background: var(--panel);
+  border: 2px solid #ffffff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+body.theme-win98 .topbar {
+  background: #000080;
+  color: #ffffff;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+body.theme-win98 .board-meta,
+body.theme-win98 .toast {
+  color: var(--text);
+}
+
+body.theme-win98 .board-meta-center,
+body.theme-win98 .board-meta-mistakes {
+  color: var(--text);
+}
+
+body.theme-win98 .button,
+body.theme-win98 .select,
+body.theme-win98 .pad-key,
+body.theme-win98 .pad-action {
+  background: var(--panel);
+  color: #000000;
+  border: 2px solid #ffffff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
+  border-radius: 0;
+}
+
+body.theme-win98 .button:active,
+body.theme-win98 .pad-key:active,
+body.theme-win98 .pad-action:active {
+  border-top-color: #404040;
+  border-left-color: #404040;
+  border-right-color: #ffffff;
+  border-bottom-color: #ffffff;
+}
+
+body.theme-win98 .topbar .button,
+body.theme-win98 .topbar .select {
+  padding: 6px 10px;
+}
+
+body.theme-win98 .topbar .select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  color-scheme: light;
+  padding-right: 26px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 16px 16px;
+}
+
+body.theme-win98 .button:focus-visible,
+body.theme-win98 .select:focus-visible,
+body.theme-win98 .cell:focus-visible,
+body.theme-win98 .pad-key:focus-visible,
+body.theme-win98 .pad-action:focus-visible {
+  outline: 1px dotted #000000;
+  outline-offset: -4px;
+}
+
+body.theme-win98 .board {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+}
+
+body.theme-win98 .cell {
+  background: #ffffff;
+  border-right-color: var(--grid-inner);
+  border-bottom-color: var(--grid-inner);
+}
+
+body.theme-win98 .cell.b-right {
+  border-right-width: 2px;
+  border-right-color: var(--grid-block);
+}
+
+body.theme-win98 .cell.b-bottom {
+  border-bottom-width: 2px;
+  border-bottom-color: var(--grid-block);
+}
+
+body.theme-win98 .cell.is-selected {
+  background: var(--hl);
+  color: #ffffff;
+}
+
+body.theme-win98 .cell.is-selected .cell-value {
+  color: #ffffff;
+}
+
+body.theme-win98 .dialog {
+  background: var(--panel);
+  color: var(--text);
+  border: 2px solid #ffffff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
+  border-radius: 0;
+}
+
+body.theme-win98 .waiting-message {
+  background: #ffffe1;
+  color: #000000;
+  border-radius: 0;
+  border: 1px solid #000000;
+  backdrop-filter: none;
+}
+
+body.theme-win98 .waiting-image {
+  border-radius: 0;
+  filter: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 2px solid #ffffff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
 }

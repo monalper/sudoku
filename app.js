@@ -205,6 +205,7 @@
 
   const init = () => {
     const appEl = document.querySelector(".app");
+    const titleEl = document.querySelector(".title");
     const boardEl = document.getElementById("board");
     const difficultyEl = document.getElementById("difficulty");
     const newGameEl = document.getElementById("newGame");
@@ -224,6 +225,140 @@
     const closeDialogEl = document.getElementById("closeDialog");
 
     const cellEls = new Array(81);
+
+    const WIN98_THEME_CLASS = "theme-win98";
+    const waitingImageEl = waitingEl ? waitingEl.querySelector(".waiting-image") : null;
+    const WIN98_PIXELATE_FACTOR = 0.08;
+    let waitingPixelOp = 0;
+
+    const applyWin98WaitingImage = async (enabled) => {
+      if (!waitingImageEl) return;
+      const op = ++waitingPixelOp;
+
+      if (!waitingImageEl.dataset.originalSrc) {
+        waitingImageEl.dataset.originalSrc = waitingImageEl.getAttribute("src") || waitingImageEl.src || "";
+      }
+
+      if (!enabled) {
+        const originalSrc = waitingImageEl.dataset.originalSrc || "";
+        if (originalSrc) waitingImageEl.src = originalSrc;
+        return;
+      }
+
+      if (waitingImageEl.dataset.pixelSrc) {
+        waitingImageEl.src = waitingImageEl.dataset.pixelSrc;
+        return;
+      }
+
+      const ensureDecoded = async (img) => {
+        if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) return;
+        try {
+          await img.decode();
+          return;
+        } catch {
+          // ignore and fall back to load event
+        }
+
+        await new Promise((resolve, reject) => {
+          const onLoad = () => resolve();
+          const onError = () => reject(new Error("waiting image failed to load"));
+          img.addEventListener("load", onLoad, { once: true });
+          img.addEventListener("error", onError, { once: true });
+        });
+      };
+
+      try {
+        await ensureDecoded(waitingImageEl);
+        if (op !== waitingPixelOp) return;
+
+        const sw = waitingImageEl.naturalWidth;
+        const sh = waitingImageEl.naturalHeight;
+        if (!sw || !sh) return;
+
+        const factor = clamp(WIN98_PIXELATE_FACTOR, 0.03, 0.2);
+        const tw = Math.max(16, Math.round(sw * factor));
+        const th = Math.max(16, Math.round(sh * factor));
+
+        const small = document.createElement("canvas");
+        small.width = tw;
+        small.height = th;
+        const sctx = small.getContext("2d");
+        if (!sctx) return;
+        sctx.imageSmoothingEnabled = true;
+        sctx.drawImage(waitingImageEl, 0, 0, tw, th);
+
+        const big = document.createElement("canvas");
+        big.width = sw;
+        big.height = sh;
+        const bctx = big.getContext("2d");
+        if (!bctx) return;
+        bctx.imageSmoothingEnabled = false;
+        bctx.drawImage(small, 0, 0, tw, th, 0, 0, sw, sh);
+
+        const dataUrl = big.toDataURL("image/png");
+        if (op !== waitingPixelOp) return;
+        waitingImageEl.dataset.pixelSrc = dataUrl;
+        waitingImageEl.src = dataUrl;
+      } catch (err) {
+        console.warn(err);
+      }
+    };
+
+    if (titleEl) {
+      const activateWin98Theme = (e) => {
+        e?.preventDefault?.();
+        document.body?.classList.toggle(WIN98_THEME_CLASS);
+        void applyWin98WaitingImage(document.body?.classList.contains(WIN98_THEME_CLASS));
+      };
+
+      let tapCount = 0;
+      let lastTapAt = 0;
+      let lastTapX = 0;
+      let lastTapY = 0;
+      let tapTimer = null;
+
+      const resetTaps = () => {
+        tapCount = 0;
+        lastTapAt = 0;
+        if (tapTimer) {
+          clearTimeout(tapTimer);
+          tapTimer = null;
+        }
+      };
+
+      titleEl.addEventListener(
+        "pointerup",
+        (e) => {
+          if (e.pointerType === "mouse") {
+            if (e.detail !== 3) return;
+            activateWin98Theme(e);
+            resetTaps();
+            return;
+          }
+
+          const now = performance.now();
+          const withinTime = now - lastTapAt <= 650;
+          const dx = e.clientX - lastTapX;
+          const dy = e.clientY - lastTapY;
+          const withinDistance = dx * dx + dy * dy <= 32 * 32;
+
+          if (!withinTime || !withinDistance) tapCount = 0;
+          tapCount++;
+
+          lastTapAt = now;
+          lastTapX = e.clientX;
+          lastTapY = e.clientY;
+
+          if (tapTimer) clearTimeout(tapTimer);
+          tapTimer = setTimeout(resetTaps, 700);
+
+          if (tapCount !== 3) return;
+          activateWin98Theme(e);
+          resetTaps();
+        },
+        { passive: false }
+      );
+    }
 
     let highScores = loadHighScores();
 
